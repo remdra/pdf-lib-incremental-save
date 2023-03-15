@@ -14,6 +14,7 @@ import {
   PrintScaling,
   ReadingDirection,
   ViewerPreferences,
+  StandardFonts,
 } from 'src/index';
 
 const examplePngImage =
@@ -37,6 +38,9 @@ const normalPdfBytes = fs.readFileSync('assets/pdfs/normal.pdf');
 const withViewerPrefsPdfBytes = fs.readFileSync(
   'assets/pdfs/with_viewer_prefs.pdf',
 );
+
+const simplePdfBytes = fs.readFileSync('assets/pdfs/simple.pdf');
+const simpleStreamsPdfBytes = fs.readFileSync('assets/pdfs/simple_streams.pdf');
 
 describe(`PDFDocument`, () => {
   describe(`load() method`, () => {
@@ -522,6 +526,51 @@ describe(`PDFDocument`, () => {
         const pdfBytes3 = await pdfDoc.save();
         expect(pdfBytes3.byteLength).toBeGreaterThan(0);
         expect(pdfBytes3.byteLength).not.toEqual(pdfBytes2.byteLength);
+      };
+
+      await expect(noErrorFunc()).resolves.not.toThrowError();
+    });
+  });
+
+  describe(`saveIncremental() method`, () => {
+    it(`can be used with different pages`, async () => {
+      const noErrorFunc = async (pageIndex: number) => {
+        const pdfDoc = await PDFDocument.load(simplePdfBytes);
+        const snapshot = pdfDoc.takeSnapshot({ pageIndex });
+        const page = pdfDoc.getPage(pageIndex);
+        const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+        const fontSize = 30;
+        page.drawText('Incremental saving is also awesome!', {
+          x: 50,
+          y: 4 * fontSize,
+          size: fontSize,
+          font: timesRomanFont,
+        });
+
+        const pdfIncrementalBytes = await pdfDoc.saveIncremental(snapshot);
+        expect(pdfIncrementalBytes.byteLength).toBeGreaterThan(0);
+      };
+
+      await expect(noErrorFunc(0)).resolves.not.toThrowError();
+      await expect(noErrorFunc(1)).resolves.not.toThrowError();
+    });
+
+    it(`can be used with object-stream PDFs`, async () => {
+      const noErrorFunc = async () => {
+        const pdfDoc = await PDFDocument.load(simpleStreamsPdfBytes);
+        const snapshot = pdfDoc.takeSnapshot({ pageIndex: 0 });
+        const page = pdfDoc.getPage(0);
+        const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+        const fontSize = 30;
+        page.drawText('Incremental saving is also awesome!', {
+          x: 50,
+          y: 4 * fontSize,
+          size: fontSize,
+          font: timesRomanFont,
+        });
+
+        const pdfIncrementalBytes = await pdfDoc.saveIncremental(snapshot);
+        expect(pdfIncrementalBytes.byteLength).toBeGreaterThan(0);
       };
 
       await expect(noErrorFunc()).resolves.not.toThrowError();

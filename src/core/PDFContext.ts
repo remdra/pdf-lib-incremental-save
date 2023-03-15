@@ -56,6 +56,11 @@ class PDFContext {
     ID?: PDFObject;
   };
   rng: SimpleRNG;
+  pdfFileDetails: {
+    pdfSize: number;
+    prevStartXRef: number;
+    useObjectStreams: boolean;
+  };
 
   private readonly indirectObjects: Map<PDFRef, PDFObject>;
 
@@ -69,6 +74,11 @@ class PDFContext {
 
     this.indirectObjects = new Map();
     this.rng = SimpleRNG.withSeed(1);
+    this.pdfFileDetails = {
+      pdfSize: 0,
+      prevStartXRef: 0,
+      useObjectStreams: false,
+    };
   }
 
   assign(ref: PDFRef, object: PDFObject): void {
