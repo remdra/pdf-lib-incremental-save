@@ -47,6 +47,7 @@ class PDFParser extends PDFObjectParser {
     super(ByteStream.of(pdfBytes), PDFContext.create(), capNumbers);
     this.objectsPerTick = objectsPerTick;
     this.throwOnInvalidObject = throwOnInvalidObject;
+    this.context.pdfFileDetails.pdfSize = pdfBytes.length;
   }
 
   async parseDocument(): Promise<PDFContext> {
@@ -288,6 +289,7 @@ class PDFParser extends PDFObjectParser {
     this.skipWhitespaceAndComments();
 
     const offset = this.parseRawInt();
+    this.context.pdfFileDetails.prevStartXRef = offset;
 
     this.skipWhitespace();
     this.matchKeyword(Keywords.eof);

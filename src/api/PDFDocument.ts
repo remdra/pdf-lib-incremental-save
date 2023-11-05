@@ -44,6 +44,7 @@ import {
   CreateOptions,
   EmbedFontOptions,
   SetTitleOptions,
+  IncrementalSaveOptions,
 } from 'src/api/PDFDocumentOptions';
 import PDFObject from 'src/core/objects/PDFObject';
 import PDFRef from 'src/core/objects/PDFRef';
@@ -66,6 +67,7 @@ import FileEmbedder, { AFRelationship } from 'src/core/embedders/FileEmbedder';
 import PDFEmbeddedFile from 'src/api/PDFEmbeddedFile';
 import PDFJavaScript from 'src/api/PDFJavaScript';
 import JavaScriptEmbedder from 'src/core/embedders/JavaScriptEmbedder';
+import { DocumentSnapshot, IncrementalDocumentSnapshot } from './snapshot';
 
 /**
  * Represents a PDF document.
@@ -1265,29 +1267,57 @@ export default class PDFDocument {
    * @returns Resolves with the bytes of the serialized document.
    */
   async save(options: SaveOptions = {}): Promise<Uint8Array> {
-    const {
-      useObjectStreams = true,
-      addDefaultPage = true,
-      objectsPerTick = 50,
-      updateFieldAppearances = true,
-    } = options;
+    const { useObjectStreams = true, objectsPerTick = 50 } = options;
 
     assertIs(useObjectStreams, 'useObjectStreams', ['boolean']);
-    assertIs(addDefaultPage, 'addDefaultPage', ['boolean']);
     assertIs(objectsPerTick, 'objectsPerTick', ['number']);
-    assertIs(updateFieldAppearances, 'updateFieldAppearances', ['boolean']);
 
-    if (addDefaultPage && this.getPageCount() === 0) this.addPage();
-
-    if (updateFieldAppearances) {
-      const form = this.formCache.getValue();
-      if (form) form.updateFieldAppearances();
-    }
-
-    await this.flush();
+    await this.prepareForSave(options);
 
     const Writer = useObjectStreams ? PDFStreamWriter : PDFWriter;
     return Writer.forContext(this.context, objectsPerTick).serializeToBuffer();
+  }
+
+  /**
+   * Serialize only the changes to this document to an array of bytes making up a PDF file.
+   * For example:
+   * ```js
+   * const snapshot = pdfDoc.takeSnapshot();
+   * ...
+   * const pdfBytes = await pdfDoc.saveIncremental(snapshot);
+   * ```
+   *
+   * Similar to [[save]] function.
+   * The changes are saved in an incremental way, the result buffer
+   * will contain only the differences
+   *
+   * @param snapshot The snapshot to be used when saving the document.
+   * @param options The options to be used when saving the document.
+   * @returns Resolves with the bytes of the serialized document.
+   */
+  async saveIncremental(
+    snapshot: DocumentSnapshot,
+    options: IncrementalSaveOptions = {},
+  ): Promise<Uint8Array> {
+    const { objectsPerTick = 50 } = options;
+
+    assertIs(objectsPerTick, 'objectsPerTick', ['number']);
+
+    const saveOptions: SaveOptions = {
+      ...options,
+      addDefaultPage: false,
+      updateFieldAppearances: false,
+    };
+    await this.prepareForSave(saveOptions);
+
+    const Writer = this.context.pdfFileDetails.useObjectStreams
+      ? PDFStreamWriter
+      : PDFWriter;
+    return Writer.forContextWithSnapshot(
+      this.context,
+      objectsPerTick,
+      snapshot,
+    ).serializeToBuffer();
   }
 
   /**
@@ -1325,6 +1355,34 @@ export default class PDFDocument {
     }
 
     return undefined;
+  }
+
+  takeSnapshot(): DocumentSnapshot {
+    const indirectObjects: number[] = [];
+
+    return new IncrementalDocumentSnapshot(
+      this.context.largestObjectNumber,
+      indirectObjects,
+      this.context.pdfFileDetails.pdfSize,
+      this.context.pdfFileDetails.prevStartXRef,
+      this.context,
+    );
+  }
+
+  private async prepareForSave(options: SaveOptions): Promise<void> {
+    const { addDefaultPage = true, updateFieldAppearances = true } = options;
+
+    assertIs(addDefaultPage, 'addDefaultPage', ['boolean']);
+    assertIs(updateFieldAppearances, 'updateFieldAppearances', ['boolean']);
+
+    if (addDefaultPage && this.getPageCount() === 0) this.addPage();
+
+    if (updateFieldAppearances) {
+      const form = this.formCache.getValue();
+      if (form) form.updateFieldAppearances();
+    }
+
+    await this.flush();
   }
 
   private async embedAll(embeddables: Embeddable[]): Promise<void> {

@@ -8,6 +8,7 @@ export * from 'src/api/operations';
 export * from 'src/api/operators';
 export * from 'src/api/rotations';
 export * from 'src/api/sizes';
+export * from 'src/api/snapshot';
 export * from 'src/api/PDFPageOptions';
 export * from 'src/api/PDFDocumentOptions';
 export * from 'src/api/StandardFonts';

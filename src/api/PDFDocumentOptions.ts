@@ -17,6 +17,10 @@ export interface SaveOptions {
   updateFieldAppearances?: boolean;
 }
 
+export interface IncrementalSaveOptions {
+  objectsPerTick?: number;
+}
+
 export interface Base64SaveOptions extends SaveOptions {
   dataUri?: boolean;
 }
