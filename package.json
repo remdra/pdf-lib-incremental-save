@@ -1,6 +1,6 @@
 {
   "name": "pdf-lib-incremental-save",
-  "version": "1.17.3",
+  "version": "1.17.4",
   "description": "Add incremental save functionality to pdf-lib.",
   "author": "Remus DRAICA <remus.draica@gmail.com>",
   "contributors": [
