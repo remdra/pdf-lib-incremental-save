@@ -54,8 +54,9 @@
       const simplePdf = await fetchBinaryAsset('pdfs/simple.pdf');
 
       const pdfDoc = await PDFDocument.load(simplePdf);
-      const snapshot = pdfDoc.takeSnapshot({ pageIndex: 0 });
+      const snapshot = pdfDoc.takeSnapshot();
       const page = pdfDoc.getPage(0);
+      snapshot.markRefForSave(page.ref);
       const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
       const fontSize = 30;
       const { height } = page.getSize();
