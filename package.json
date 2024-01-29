@@ -1,8 +1,8 @@
 {
-  "name": "pdf-lib",
+  "name": "pdf-lib-incremental-save",
   "version": "1.17.3",
-  "description": "Create and modify PDF files with JavaScript",
-  "author": "Andrew Dillon <andrew.dillon.j@gmail.com>",
+  "description": "Add incremental save functionality to pdf-lib.",
+  "author": "Remus DRAICA <remus.draica@gmail.com>",
   "contributors": [
     "jerp (https://github.com/jerp)",
     "Greg Bacchus (https://github.com/gregbacchus)",
@@ -120,11 +120,8 @@
   },
   "license": "MIT",
   "private": false,
-  "homepage": "https://pdf-lib.js.org",
-  "repository": "git+https://github.com/Hopding/pdf-lib.git",
-  "bugs": {
-    "url": "https://github.com/Hopding/pdf-lib/issues"
-  },
+  "homepage": "",
+  "repository": "git+https://github.com/remdra/pdf-lib-incremental-save",
   "keywords": [
     "pdf-lib",
     "pdf",
@@ -137,6 +134,7 @@
     "editing",
     "typescript",
     "javascript",
-    "library"
+    "library",
+    "incremental"
   ]
 }
